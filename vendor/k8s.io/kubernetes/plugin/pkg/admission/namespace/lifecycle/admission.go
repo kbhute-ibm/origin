@@ -21,7 +21,11 @@ import (
 	"io"
 	"time"
 
+<<<<<<< HEAD
 	lru "github.com/hashicorp/golang-lru"
+=======
+	"github.com/golang/glog"
+>>>>>>> d6641e0101d7d704aa1522773f431d385f3bb245
 
 	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
 	"k8s.io/kubernetes/pkg/controller/framework"
@@ -40,6 +44,13 @@ const (
 	// how long a namespace stays in the force live lookup cache before expiration.
 	forceLiveLookupTTL = 30 * time.Second
 )
+
+// how long to wait for a missing namespace before re-checking the cache (and then doing a live lookup)
+// this accomplishes two things:
+// 1. It allows a watch-fed cache time to observe a namespace creation event
+// 2. It allows time for a namespace creation to distribute to members of a storage cluster,
+//    so the live lookup has a better chance of succeeding even if it isn't performed against the leader.
+const missingNamespaceWait = 50 * time.Millisecond
 
 func init() {
 	admission.RegisterPlugin(PluginName, func(client clientset.Interface, config io.Reader) (admission.Interface, error) {
@@ -102,6 +113,7 @@ func (l *lifecycle) Admit(a admission.Attributes) error {
 		return nil
 	}
 
+<<<<<<< HEAD
 	// we need to wait for our caches to warm
 	if !l.WaitForReady() {
 		return admission.NewForbidden(a, fmt.Errorf("not yet ready to handle request"))
@@ -115,10 +127,14 @@ func (l *lifecycle) Admit(a admission.Attributes) error {
 
 	key := makeNamespaceKey(a.GetNamespace())
 	namespaceObj, exists, err = l.namespaceInformer.GetStore().Get(key)
+=======
+	namespaceObj, exists, err := l.store.Get(&api.Namespace{ObjectMeta: api.ObjectMeta{Name: a.GetNamespace()}})
+>>>>>>> d6641e0101d7d704aa1522773f431d385f3bb245
 	if err != nil {
 		return errors.NewInternalError(err)
 	}
 
+<<<<<<< HEAD
 	// forceLiveLookup if true will skip looking at local cache state and instead always make a live call to server.
 	forceLiveLookup := false
 	lruItemObj, ok := l.forceLiveLookupCache.Get(a.GetNamespace())
@@ -130,6 +146,25 @@ func (l *lifecycle) Admit(a admission.Attributes) error {
 	// refuse to operate on non-existent namespaces
 	if !exists || forceLiveLookup {
 		// in case of latency in our caches, make a call direct to storage to verify that it truly exists or not
+=======
+	if !exists && a.GetOperation() == admission.Create {
+		// give the cache time to observe the namespace before rejecting a create.
+		// this helps when creating a namespace and immediately creating objects within it.
+		time.Sleep(missingNamespaceWait)
+		namespaceObj, exists, err = l.store.Get(&api.Namespace{ObjectMeta: api.ObjectMeta{Name: a.GetNamespace()}})
+		if err != nil {
+			return errors.NewInternalError(err)
+		}
+		if exists {
+			glog.V(4).Infof("found %s in cache after waiting", a.GetNamespace())
+		}
+	}
+
+	// refuse to operate on non-existent namespaces
+	if !exists {
+		// as a last resort, make a call directly to storage
+		// this also benefits from the Sleep() above allowing for propagation in HA storage cases
+>>>>>>> d6641e0101d7d704aa1522773f431d385f3bb245
 		namespaceObj, err = l.client.Core().Namespaces().Get(a.GetNamespace())
 		if err != nil {
 			if errors.IsNotFound(err) {
@@ -137,6 +172,7 @@ func (l *lifecycle) Admit(a admission.Attributes) error {
 			}
 			return errors.NewInternalError(err)
 		}
+		glog.V(4).Infof("found %s via storage lookup", a.GetNamespace())
 	}
 
 	// ensure that we're not trying to create objects in terminating namespaces
