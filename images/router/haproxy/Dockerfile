@@ -18,7 +18,7 @@ RUN INSTALL_PKGS="haproxy" && \
     mkdir -p /var/lib/haproxy/{conf,run,bin,log} && \
     touch /var/lib/haproxy/conf/{{os_http_be,os_edge_http_be,os_tcp_be,os_sni_passthrough,os_reencrypt,os_edge_http_expose,os_edge_http_redirect}.map,haproxy.config} && \
     chmod -R 777 /var && \
-    setcap 'cap_net_bind_service=ep' /usr/sbin/haproxy
+    setcap 'cap_net_bind_service=ep' /usr/local/sbin/haproxy 
 
 COPY . /var/lib/haproxy/
 

@@ -3,15 +3,23 @@
 #
 # The standard name for this image is openshift/openvswitch
 #
-FROM openshift/origin-base
+FROM ecos0003:5000/rhel:7.2
 
 COPY scripts/* /usr/local/bin/
 
-RUN curl -L -o /etc/yum.repos.d/origin-next-epel-7.repo https://copr.fedoraproject.org/coprs/maxamillion/origin-next/repo/epel-7/maxamillion-origin-next-epel-7.repo && \
-    INSTALL_PKGS="openvswitch" && \
-    yum install -y $INSTALL_PKGS && \
-    rpm -V $INSTALL_PKGS && \
-    yum clean all && \
+RUN yum install -y wget tar make gcc openssl python perl && yum clean all
+# Install openvswitch from the source
+RUN mkdir openvswitch && cd ./openvswitch
+RUN wget http://openvswitch.org/releases/openvswitch-2.4.0.tar.gz
+RUN tar -xvf openvswitch-2.4.0.tar.gz
+RUN cd openvswitch-2.4.0/ && ./configure && make && make install
+
+
+
+
+
+
+RUN    yum clean all && \
     chmod +x /usr/local/bin/*
 
 LABEL io.k8s.display-name="OpenShift Origin OpenVSwitch Daemon" \
@@ -19,3 +27,6 @@ LABEL io.k8s.display-name="OpenShift Origin OpenVSwitch Daemon" \
 VOLUME /etc/openswitch
 ENV HOME /root
 ENTRYPOINT ["/usr/local/bin/ovs-run.sh"]
+
+ ADD  scripts/* /usr/local/bin/
+ RUN chmod +x /usr/local/bin/*

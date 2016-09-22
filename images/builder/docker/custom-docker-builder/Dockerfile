@@ -16,10 +16,16 @@
 #
 FROM openshift/origin-base
 
-RUN INSTALL_PKGS="gettext automake make docker" && \
+RUN INSTALL_PKGS="gettext automake make" && \
     yum install -y $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS && \
     yum clean all
+
+# Install docker
+RUN mkdir /docker && cd /docker
+RUN wget ftp://ftp.unicamp.br/pub/linuxpatch/s390x/redhat/rhel7.1/docker/docker-1.9.1-rhel7.1-20151205.tar.gz
+RUN tar -xvzf docker-1.9.1-rhel7.1-20151205.tar.gz && cp docker-1.9.1-rhel7.1-20151205/docker /usr/bin
+
 
 LABEL io.k8s.display-name="OpenShift Origin Custom Builder Example" \
       io.k8s.description="This is an example of a custom builder for use with OpenShift Origin."

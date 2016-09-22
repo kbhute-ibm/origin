@@ -12,7 +12,7 @@ source "${OS_ROOT}/contrib/node/install-sdn.sh"
 
 if [[ "${OS_RELEASE:-}" == "n" ]]; then
   # Use local binaries
-  imagedir="${OS_OUTPUT_BINPATH}/linux/amd64"
+  imagedir="${OS_OUTPUT_BINPATH}/linux/s390x" 
   # identical to build-cross.sh
   os::build::os_version_vars
   OS_RELEASE_COMMIT="${OS_GIT_SHORT_VERSION}"
@@ -31,7 +31,7 @@ else
   fi
 
   # Extract the release achives to a staging area.
-  os::build::detect_local_release_tars "linux-64bit"
+  os::build::detect_local_release_tars "linux-s390x" 
 
   echo "Building images from release tars for commit ${OS_RELEASE_COMMIT}:"
   echo " primary: $(basename ${OS_PRIMARY_RELEASE_TAR})"

@@ -4,10 +4,9 @@
 #
 # The standard name for this image is openshift/origin-base
 #
-FROM centos:centos7
+FROM ecos0003:5000/rhel:7.2
 
-RUN INSTALL_PKGS="which git tar wget hostname sysvinit-tools util-linux bsdtar epel-release \
-      socat ethtool device-mapper iptables tree findutils nmap-ncat e2fsprogs xfsprogs lsof" && \
+RUN INSTALL_PKGS="which git tar wget socat hostname sysvinit-tools util-linux ethtool bsdtar" && \
     yum install -y $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS && \
     yum clean all && \

@@ -6,13 +6,16 @@
 #
 FROM openshift/origin-base
 
+RUN yum install --nogpgcheck -y gcc-c++ gcc glibc-devel make curl zip hg && yum clean all
+
 ENV VERSION=1.6 \
     GOARM=5 \
-    GOPATH=/go \
-    GOROOT=/usr/local/go \
-    OS_VERSION_FILE=/go/src/github.com/openshift/origin/os-version-defs \
     TMPDIR=/openshifttmp
-ENV PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+
+ADD go/ /usr/local/go/
+ENV GOROOT /usr/local/go
+ENV PATH $PATH:/usr/local/go/bin/
+ENV GOPATH /go
 
 RUN mkdir $TMPDIR && \
     INSTALL_PKGS="make gcc zip mercurial krb5-devel bsdtar" && \
